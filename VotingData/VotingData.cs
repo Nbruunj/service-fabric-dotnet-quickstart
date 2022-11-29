@@ -3,6 +3,12 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
+using Microsoft.ServiceFabric.Data;
+using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
+using System.Fabric;
+using System.IO;
+using System.Security.Policy;
+
 namespace VotingData
 {
     using System.Collections.Generic;
@@ -15,6 +21,8 @@ namespace VotingData
     using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.ServiceFabric;
 
     /// <summary>
     /// The FabricRuntime creates an instance of this class for each service type instance. 
@@ -52,12 +60,15 @@ namespace VotingData
                                     .ConfigureServices(
                                         services => services
                                             .AddSingleton<StatefulServiceContext>(serviceContext)
-                                            .AddSingleton<IReliableStateManager>(this.StateManager))
-                                    .UseContentRoot(Directory.GetCurrentDirectory())
-                                    .UseStartup<Startup>()
-                                    .UseServiceFabricIntegration(listener, ServiceFabricIntegrationOptions.UseUniqueServiceUrl)
-                                    .UseUrls(url)
-                                    .Build();
+                                            .AddSingleton<IReliableStateManager>(this.StateManager)
+                                            .AddSingleton<ITelemetryInitializer>((serviceProvider) => FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(serviceContext)))
+                                        .UseContentRoot(Directory.GetCurrentDirectory())
+                                        .UseStartup<Startup>()
+                                        .UseApplicationInsights()
+                                        .UseServiceFabricIntegration(listener, ServiceFabricIntegrationOptions.UseUniqueServiceUrl)
+                                        .UseUrls(url)
+                                        .Build();
+
                             }))
             };
         }

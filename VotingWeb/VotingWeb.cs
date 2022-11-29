@@ -16,6 +16,8 @@ namespace VotingWeb
     using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
     using Microsoft.ServiceFabric.Services.Communication.Runtime;
     using Microsoft.ServiceFabric.Services.Runtime;
+    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ApplicationInsights.ServiceFabric;
 
     /// <summary>
     /// The FabricRuntime creates an instance of this class for each service type instance. 
@@ -53,17 +55,22 @@ namespace VotingWeb
                                     })
                                     .ConfigureServices(
                                         services => services
-                                            .AddSingleton<HttpClient>(new HttpClient())
-                                            .AddSingleton<FabricClient>(new FabricClient())
-                                            .AddSingleton<StatelessServiceContext>(serviceContext))
+                                        .AddSingleton<HttpClient>(new HttpClient())
+                                        .AddSingleton<FabricClient>(new FabricClient())
+                                        .AddSingleton<StatelessServiceContext>(serviceContext)
+                                        .AddSingleton<ITelemetryInitializer>((serviceProvider) => FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(serviceContext)))
                                     .UseContentRoot(Directory.GetCurrentDirectory())
                                     .UseStartup<Startup>()
+                                    .UseApplicationInsights()
                                     .UseServiceFabricIntegration(listener, ServiceFabricIntegrationOptions.None)
                                     .UseUrls(url)
                                     .Build();
-                            }))
+                                 }))
             };
         }
+
+
+
 
         /// <summary>
         /// Constructs a service name for a specific poll.
